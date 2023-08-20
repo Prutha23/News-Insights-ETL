@@ -1,0 +1,46 @@
+#Loading Necessary Packages
+import org.apache.spark.sql._
+import org.apache.spark.sql.types._
+
+#Creating the Schema
+val newsArticleSchema = new StructType(Array(
+StructField("author",StringType,true),
+StructField("content",StringType,true),
+StructField("description",StringType,true),
+StructField("publishedAt",StringType,true),
+StructField("source",
+	StructType(Array(
+		StructField("id",StringType,true),
+		StructField("name",StringType,true))),
+				    true),
+StructField("title",StringType,true),
+StructField("url",StringType,true),
+StructField("urlToImage",StringType,true)))
+
+#Loading the Data into Data-Frame
+val news = spark.readStream.format("json")
+		   .schema(newsArticleSchema)
+		   .option("path","file:////home/prutha232/news/data/")
+		   .load()
+		  
+news.columns
+
+#Creating the write-stream
+val console_stream = news.writeStream
+	.format("json")
+	.option("checkpointLocation", "file:////home/prutha232/chkpt")
+	.outputMode("append")
+	.option("path", "/BigDataNewsTest/")
+	.start()
+
+#Creating new Data-Frame Consisting only 4 columns
+val news_hive = news.select($"author",$"description",$"title",$"url")
+
+#Creating Write Stream for Hive
+val hive_stream = news_hive.writeStream
+	.format("csv")
+	.option("checkpointLocation", "file:////home/prutha232/chkpthive1")
+	.outputMode("append")
+	.option("path", "/BigData/hive/project_final")
+	.start()  
+

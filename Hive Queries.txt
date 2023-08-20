@@ -1,0 +1,25 @@
+#Creating Table in hive
+CREATE EXTERNAL TABLE IF NOT EXISTS news_data (
+author STRING,
+description STRING,
+title STRING,
+url STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+LOCATION '/BigData/hive/project_final';
+
+Query#1:
+SELECT author, COUNT(*) AS article_count
+FROM news_data
+GROUP BY author
+ORDER BY article_count DESC;
+
+Query#2:
+SELECT word, COUNT(*) AS title_count
+FROM (
+    SELECT explode(split(title, ' ')) AS word
+    FROM news_data
+) words
+WHERE word != ''
+GROUP BY word
+ORDER BY title_count DESC
+LIMIT 10;
